@@ -1,0 +1,41 @@
+-- Create the schema of the database
+CREATE TABLE authors (
+    author_id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    birthdate DATE
+);
+
+CREATE TABLE books (
+    book_id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    published_date DATE,
+    author_id INT REFERENCES authors(author_id)
+);
+
+-- Populate the database with some data
+INSERT INTO authors (name, birthdate) VALUES
+('J.K. Rowling', '1965-07-31'),
+('George Orwell', '1903-06-25');
+
+INSERT INTO books (title, published_date, author_id) VALUES
+('Harry Potter and the Philosopher''s Stone', '1997-06-26', 1),
+('1984', '1949-06-08', 2);
+
+-- Update the database to ensure the data stays intact
+-- Adding UNIQUE constraint to author's name
+ALTER TABLE authors ADD CONSTRAINT unique_author_name UNIQUE (name);
+
+-- Create roles with specific permissions
+DO $$
+BEGIN
+   IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'read_only') THEN
+      CREATE ROLE read_only WITH LOGIN PASSWORD 'password';
+   END IF;
+END
+$$;
+GRANT SELECT ON authors, books TO read_only;
+
+-- Update the database to ensure it stays fast
+-- Adding indexes for performance improvements
+CREATE INDEX idx_authors_name ON authors(name);
+CREATE INDEX idx_books_published_date ON books(published_date);
